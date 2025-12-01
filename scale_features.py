@@ -425,6 +425,15 @@ def main():
     df['Date'] = pd.to_datetime(df['Date'])
     print(f"   Loaded {len(df):,} rows, {len(df.columns)} columns")
     
+def process_scaling(df):
+    """
+    Process scaling for the dataframe.
+    Args:
+        df: DataFrame to scale
+    Returns:
+        df_scaled: Scaled DataFrame
+        scaling_log: Log of transformations
+    """
     # Analyze data
     print("\n2. Analyzing data for scaling...")
     scaling_analysis, numeric_cols = analyze_data_for_scaling(df)
@@ -432,6 +441,25 @@ def main():
     # Apply scaling
     print("\n3. Applying scaling transformations...")
     df_scaled, scaling_log = apply_scaling(df, scaling_analysis, numeric_cols)
+    
+    return df_scaled, scaling_log
+
+def main():
+    """
+    Main function to perform scaling and create report.
+    """
+    print("=" * 70)
+    print("FEATURE SCALING/NORMALIZATION")
+    print("=" * 70)
+    
+    # Load prepared data
+    print("\n1. Loading prepared data...")
+    df = pd.read_csv('data/integrated_prepared_data.csv')
+    df['Date'] = pd.to_datetime(df['Date'])
+    print(f"   Loaded {len(df):,} rows, {len(df.columns)} columns")
+    
+    # Process scaling
+    df_scaled, scaling_log = process_scaling(df)
     
     # Save scaled data
     print("\n4. Saving scaled data...")
@@ -459,7 +487,7 @@ def main():
     print(f"\nSummary:")
     print(f"  Input: integrated_prepared_data.csv")
     print(f"  Output: integrated_scaled_data.csv")
-    print(f"  Columns scaled: {len(numeric_cols)}")
+    print(f"  Columns scaled: {len(df_scaled.select_dtypes(include=[np.number]).columns)}")
     print(f"  Methods used: {len(set(e['method'] for e in scaling_log))}")
     print(f"  Rows: {len(df_scaled):,}")
     print(f"  Null values: {df_scaled.isnull().sum().sum()}")

@@ -54,6 +54,40 @@ def main():
     df['Date'] = pd.to_datetime(df['Date'])
     print(f"   Loaded {len(df):,} rows, {len(df.columns)} columns")
     
+def remove_outliers(df, zscore_results=None, iqr_results=None, method='zscore'):
+    """
+    Remove outliers from the dataframe.
+    Args:
+        df: DataFrame
+        zscore_results: Results from Z-score detection
+        iqr_results: Results from IQR detection
+        method: 'zscore' or 'iqr'
+    Returns:
+        df_clean: DataFrame with outliers removed
+    """
+    df_clean = df.copy()
+    outlier_indices = set()
+    
+    if method == 'zscore' and zscore_results:
+        for col, stats in zscore_results.items():
+            outlier_indices.update(stats['outlier_indices'])
+    elif method == 'iqr' and iqr_results:
+        for col, stats in iqr_results.items():
+            outlier_indices.update(stats['outlier_indices'])
+            
+    if outlier_indices:
+        df_clean = df_clean.drop(index=list(outlier_indices))
+        
+    return df_clean
+
+def analyze_outliers(df):
+    """
+    Analyze outliers in the dataframe.
+    Args:
+        df: DataFrame
+    Returns:
+        zscore_results, iqr_results
+    """
     # Get numeric columns
     numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
     exclude_cols = ['Date']
@@ -121,6 +155,24 @@ def main():
             print(f"{col:<25} {stats['count']:<12} {stats['percentage']:.2f}%      [{stats['lower_bound']:.2f}, {stats['upper_bound']:.2f}]")
     else:
         print("   No outliers found with IQR method")
+        
+    return zscore_results, iqr_results
+
+def main():
+    """
+    Main outlier detection function.
+    """
+    print("=" * 70)
+    print("OUTLIER DETECTION ANALYSIS")
+    print("=" * 70)
+    
+    # Load data
+    print("\n1. Loading data...")
+    df = pd.read_csv('data/integrated_prepared_data.csv')
+    df['Date'] = pd.to_datetime(df['Date'])
+    print(f"   Loaded {len(df):,} rows, {len(df.columns)} columns")
+    
+    zscore_results, iqr_results = analyze_outliers(df)
     
     # ========== CONCRETE EXAMPLES ==========
     print("\n" + "=" * 70)

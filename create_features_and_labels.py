@@ -207,6 +207,15 @@ def main():
     print(f"   Stocks: {df['stock'].unique()}")
     print(f"   Date range: {df['Date'].min()} to {df['Date'].max()}")
     
+def process_data(df):
+    """
+    Process the dataframe to engineer features and construct labels.
+    Args:
+        df: DataFrame with prepared data
+    Returns:
+        df_ml: DataFrame with features and labels
+        features_log: List of created features
+    """
     # Engineer features
     df_features, features_log = engineer_features(df)
     
@@ -251,6 +260,27 @@ def main():
     print(f"\n   Selected {len(available_cols)} columns")
     print(f"   Features: {len(available_cols) - 4} (excluding Date, stock, and target variables)")
     
+    return df_ml, features_log
+
+def main():
+    """
+    Main function to engineer features and construct labels.
+    """
+    print("=" * 70)
+    print("FEATURE ENGINEERING AND LABEL CONSTRUCTION")
+    print("=" * 70)
+    
+    # Load prepared data (unscaled)
+    print("\n1. Loading prepared data...")
+    df = pd.read_csv('data/integrated_prepared_data.csv')
+    df['Date'] = pd.to_datetime(df['Date'])
+    print(f"   Loaded {len(df):,} rows, {len(df.columns)} columns")
+    print(f"   Stocks: {df['stock'].unique()}")
+    print(f"   Date range: {df['Date'].min()} to {df['Date'].max()}")
+    
+    # Process data
+    df_ml, features_log = process_data(df)
+    
     # Save to CSV
     print("\n5. Saving ML dataset...")
     output_file = 'data/ml_features_and_labels.csv'
@@ -283,6 +313,7 @@ def main():
         print(f"  Outperform rate: {(label_counts.get(1, 0) / (label_counts.get(0, 0) + label_counts.get(1, 0)) * 100) if (label_counts.get(0, 0) + label_counts.get(1, 0)) > 0 else 0:.2f}%")
     
     print(f"\nFeature columns:")
+    available_cols = df_ml.columns.tolist()
     for i, col in enumerate(available_cols[:10], 1):
         print(f"  {i}. {col}")
     if len(available_cols) > 10:
