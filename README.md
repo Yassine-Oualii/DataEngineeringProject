@@ -1,6 +1,6 @@
 # Data Preparation Comparison Walkthrough
 
-This document showcases how different data preparation techniques enhance ML model accuracy for predicting stock performance (Stock vs SP500). We compare Random Forest and H2O AutoML (Stacked Ensemble) using both Random Split and Time Series Split to understand the true impact of data preparation.
+This document showcases how different data preparation techniques enhance ML model accuracy for predicting stock performance (Stock vs SP500).
 
 ## Results Summary
 
