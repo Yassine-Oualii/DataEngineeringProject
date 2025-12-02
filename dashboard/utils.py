@@ -6,6 +6,8 @@ import streamlit as st
 import pandas as pd
 import os
 from functools import lru_cache
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 @st.cache_data
 def load_data():
@@ -54,3 +56,40 @@ def create_page_header(title):
     """Create a consistent page header"""
     st.header(title)
     st.markdown("---")
+
+def get_data_distribution(data, column):
+    """Generate distribution statistics for a column"""
+    return {
+        'mean': data[column].mean(),
+        'median': data[column].median(),
+        'std': data[column].std(),
+        'min': data[column].min(),
+        'max': data[column].max(),
+        'q25': data[column].quantile(0.25),
+        'q75': data[column].quantile(0.75)
+    }
+
+def plot_data_distribution(data, column, bins=30):
+    """Plot histogram and KDE for data distribution"""
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.hist(data[column].dropna(), bins=bins, edgecolor='black', alpha=0.7)
+    ax.set_xlabel(column)
+    ax.set_ylabel('Frequency')
+    ax.set_title(f'Distribution of {column}')
+    return fig
+
+def extract_feature_importance(results_df, top_n=10):
+    """Extract feature importance from model results"""
+    if 'feature_importance' in results_df.columns:
+        importance = results_df['feature_importance'].value_counts().head(top_n)
+        return importance
+    return None
+
+def plot_feature_importance(importance_data, title='Feature Importance', top_n=10):
+    """Plot feature importance as horizontal bar chart"""
+    fig, ax = plt.subplots(figsize=(10, 6))
+    importance_data.head(top_n).plot(kind='barh', ax=ax, color='steelblue')
+    ax.set_xlabel('Importance Score')
+    ax.set_title(title)
+    ax.invert_yaxis()
+    return fig
