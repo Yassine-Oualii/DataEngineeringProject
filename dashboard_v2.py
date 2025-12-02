@@ -170,42 +170,8 @@ elif page == "🔗 Data Integration":
                 with st.expander(f"**{category}** ({len(matching_cols)} columns)"):
                     st.write(", ".join(matching_cols))
         
-        # Time series visualization
-        st.subheader("Time Series Coverage")
-        
-        # Stock prices over time
-        fig = px.line(
-            df, 
-            x='Date', 
-            y='Close', 
-            color='stock',
-            title='Stock Prices Over Time'
-        )
-        fig.update_layout(height=400)
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Data completeness heatmap
-        st.subheader("Data Completeness by Source")
-        
-        null_pct = (df.isnull().sum() / len(df) * 100).sort_values(ascending=False)
-        null_pct = null_pct[null_pct > 0]
-        
-        if len(null_pct) > 0:
-            fig = px.bar(
-                x=null_pct.index,
-                y=null_pct.values,
-                title="Missing Data by Column (%)",
-                labels={'x': 'Column', 'y': 'Missing %'}
-            )
-            fig.update_layout(height=400)
-            st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.success("✅ No missing data in integrated dataset!")
-        
-        st.markdown("---")
-        
         # Enhanced Time Series Analysis
-        st.subheader("📈 Advanced Time Series Trends")
+        st.subheader("📈 Time Series Trends")
         
         col1, col2 = st.columns(2)
         
@@ -232,96 +198,63 @@ elif page == "🔗 Data Integration":
                    (df['Date'] <= pd.to_datetime(date_range[1]))
             filtered_df = df[mask]
             
-            # 1. Rolling Average Trends
-            st.markdown("##### 📊 Rolling Averages (30-day)")
-            
-            fig_rolling = go.Figure()
-            
-            for stock in selected_stocks:
-                stock_data = filtered_df[filtered_df['stock'] == stock].sort_values('Date')
-                rolling_avg = stock_data['Close'].rolling(window=30).mean()
-                
-                fig_rolling.add_trace(go.Scatter(
-                    x=stock_data['Date'],
-                    y=rolling_avg,
-                    name=f"{stock} - 30D MA",
-                    mode='lines',
-                    opacity=0.8
-                ))
-                
-                # Add actual prices
-                fig_rolling.add_trace(go.Scatter(
-                    x=stock_data['Date'],
-                    y=stock_data['Close'],
-                    name=f"{stock} - Price",
-                    mode='lines',
-                    opacity=0.3,
-                    line=dict(dash='dot')
-                ))
-            
-            fig_rolling.update_layout(
-                title="Stock Prices with 30-Day Moving Average",
-                xaxis_title="Date",
-                yaxis_title="Price",
-                height=400,
-                hovermode='x unified'
+                        # Simple price comparison
+            fig = px.line(
+                filtered_df,
+                x='Date',
+                y='Close',
+                color='stock',
+                title=f'Stock Prices: {date_range[0]} to {date_range[1]}'
             )
-            st.plotly_chart(fig_rolling, use_container_width=True)
+            fig.update_layout(height=400)
+            st.plotly_chart(fig, width='stretch')
             
-            # 2. Volatility Analysis
-            st.markdown("##### 🌊 Daily Returns Volatility")
-            
-            fig_volatility = go.Figure()
-            
-            for stock in selected_stocks:
-                stock_data = filtered_df[filtered_df['stock'] == stock].sort_values('Date')
-                if 'daily_return' in stock_data.columns:
-                    # Calculate rolling volatility (21-day)
-                    returns = stock_data['daily_return'].dropna()
-                    if len(returns) > 21:
-                        rolling_vol = returns.rolling(window=21).std() * 100  # Convert to percentage
-                        
-                        fig_volatility.add_trace(go.Scatter(
-                            x=stock_data['Date'].iloc[20:],  # Align with rolling window
-                            y=rolling_vol.iloc[20:],
-                            name=f"{stock} - 21D Volatility",
-                            mode='lines',
-                            fill='tozeroy',
-                            opacity=0.5
-                        ))
-            
-            fig_volatility.update_layout(
-                title="21-Day Rolling Volatility (%)",
-                xaxis_title="Date",
-                yaxis_title="Volatility (%)",
-                height=400
-            )
-            st.plotly_chart(fig_volatility, use_container_width=True)
-            
-            # 3. Correlation Heatmap
-            st.markdown("##### 🔗 Stock Price Correlations")
-            
-            # Create pivot table of closing prices
-            pivot_data = filtered_df.pivot_table(
-                index='Date',
-                columns='stock',
-                values='Close'
-            ).dropna()
-            
-            if len(pivot_data.columns) > 1:
-                correlation_matrix = pivot_data.corr()
+            # Simple correlation heatmap
+            try:
+                pivot_data = filtered_df.pivot_table(
+                    index='Date',
+                    columns='stock',
+                    values='Close'
+                ).dropna()
                 
-                fig_corr = px.imshow(
-                    correlation_matrix,
-                    text_auto='.2f',
-                    aspect="auto",
-                    color_continuous_scale='RdBu_r',
-                    title="Correlation Matrix of Selected Stocks",
-                    zmin=-1,
-                    zmax=1
-                )
-                fig_corr.update_layout(height=400)
-                st.plotly_chart(fig_corr, use_container_width=True)
+                if len(pivot_data.columns) > 1:
+                    correlation_matrix = pivot_data.corr()
+                    
+                    fig_corr = px.imshow(
+                        correlation_matrix,
+                        text_auto='.2f',
+                        aspect="auto",
+                        color_continuous_scale='RdBu_r',
+                        title="Stock Price Correlations",
+                        zmin=-1,
+                        zmax=1
+                    )
+                    fig_corr.update_layout(height=400)
+                    st.plotly_chart(fig_corr, width='stretch')
+            except:
+                st.info("Could not create correlation matrix")
+        
+        # Data completeness heatmap
+        st.subheader("Data Completeness by Source")
+        
+        null_pct = (df.isnull().sum() / len(df) * 100).sort_values(ascending=False)
+        null_pct = null_pct[null_pct > 0]
+        
+        if len(null_pct) > 0:
+            fig = px.bar(
+                x=null_pct.index,
+                y=null_pct.values,
+                title="Missing Data by Column (%)",
+                labels={'x': 'Column', 'y': 'Missing %'}
+            )
+            fig.update_layout(height=400)
+            st.plotly_chart(fig, width='stretch')
+        else:
+            st.success("✅ No missing data in integrated dataset!")
+        
+        st.markdown("---")
+        
+
 
 # ============================================================
 # PAGE 3: DATA CLEANING
@@ -354,7 +287,7 @@ elif page == "🧹 Data Cleaning":
         outlier_df = data['outliers']
         
         # Display outlier summary
-        st.dataframe(outlier_df, use_container_width=True)
+        st.dataframe(outlier_df, width='stretch')
         
         # Visualization
         if 'column' in outlier_df.columns and 'outliers_detected' in outlier_df.columns:
@@ -368,7 +301,7 @@ elif page == "🧹 Data Cleaning":
                 labels={'outliers_detected': 'Number of Outliers'}
             )
             fig.update_layout(height=400)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
     
     if 'raw' in data and 'prepared' in data:
         rows_before = len(data['raw'])
@@ -409,7 +342,7 @@ elif page == "⚖️ Feature Scaling":
         
         # Display scaling log
         st.subheader("Scaling Details")
-        st.dataframe(scaling_df, use_container_width=True)
+        st.dataframe(scaling_df, width='stretch')
         
         # Before/After comparison (if available)
         if 'mean_before' in scaling_df.columns and 'mean_after' in scaling_df.columns:
@@ -430,10 +363,10 @@ elif page == "⚖️ Feature Scaling":
             )
             
             fig.update_layout(height=400, showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
 
 # ============================================================
-# PAGE 5: FEATURE ENGINEERING
+# PAGE 5: FEATURE ENGINEERING (UPDATED WITH STOCK TOGGLE)
 # ============================================================
 elif page == "🔧 Feature Engineering":
     st.header("Feature Engineering")
@@ -486,7 +419,399 @@ elif page == "🔧 Feature Engineering":
                 color_discrete_sequence=['#EF553B', '#00CC96']
             )
             fig.update_layout(height=400)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
+        
+        st.markdown("---")
+        
+        # ENGINEERED FEATURES ANALYSIS SECTION
+        st.subheader("📈 Engineered Features Analysis")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # Select stocks for analysis
+            stocks = df['stock'].unique()[:5]  # Limit to first 5 stocks for clarity
+            selected_stocks = st.multiselect(
+                "Select stocks for feature analysis",
+                stocks,
+                default=stocks[:2] if len(stocks) >= 2 else stocks[:1]
+            )
+        
+        with col2:
+            # Select time period
+            if 'Date' in df.columns:
+                min_date = df['Date'].min().date()
+                max_date = df['Date'].max().date()
+                date_range = st.date_input(
+                    "Select date range",
+                    [min_date, max_date],
+                    min_value=min_date,
+                    max_value=max_date
+                )
+            else:
+                st.info("Date column not available in ML dataset")
+                date_range = [None, None]
+        
+        if selected_stocks and len(date_range) == 2 and date_range[0] and date_range[1]:
+            try:
+                # Filter data
+                mask = (df['stock'].isin(selected_stocks)) & \
+                       (df['Date'] >= pd.to_datetime(date_range[0])) & \
+                       (df['Date'] <= pd.to_datetime(date_range[1]))
+                filtered_df = df[mask].copy()
+                
+                if len(filtered_df) == 0:
+                    st.warning("No data available for the selected date range and stocks.")
+                else:
+                    # 1. Daily Returns Analysis
+                    st.markdown("##### 📊 Daily Returns Analysis")
+                    
+                    if 'daily_return' in filtered_df.columns:
+                        # Create line chart of daily returns
+                        fig_returns = px.line(
+                            filtered_df,
+                            x='Date',
+                            y='daily_return',
+                            color='stock',
+                            title='Daily Returns Over Time',
+                            labels={'daily_return': 'Daily Return'}
+                        )
+                        fig_returns.update_layout(
+                            height=400,
+                            xaxis_title="Date",
+                            yaxis_title="Daily Return",
+                            hovermode='x unified'
+                        )
+                        st.plotly_chart(fig_returns, width='stretch')
+                        
+                        # Distribution of daily returns
+                        fig_returns_dist = px.histogram(
+                            filtered_df,
+                            x='daily_return',
+                            color='stock',
+                            nbins=50,
+                            title='Distribution of Daily Returns',
+                            opacity=0.7,
+                            barmode='overlay',
+                            labels={'daily_return': 'Daily Return'}
+                        )
+                        fig_returns_dist.update_layout(
+                            height=400,
+                            xaxis_title="Daily Return",
+                            yaxis_title="Frequency"
+                        )
+                        st.plotly_chart(fig_returns_dist, width='stretch')
+                    else:
+                        st.info("'daily_return' feature not available in the dataset")
+                    
+                    # 2. Volatility Analysis (21-day rolling)
+                    st.markdown("##### 🌊 Rolling Volatility Analysis")
+                    
+                    volatility_data = []
+                    
+                    for stock in selected_stocks:
+                        stock_data = filtered_df[filtered_df['stock'] == stock].sort_values('Date')
+                        
+                        if 'daily_return' in stock_data.columns and len(stock_data) >= 21:
+                            returns = stock_data['daily_return'].dropna()
+                            
+                            if len(returns) >= 21:
+                                # Calculate rolling volatility (21-day)
+                                rolling_vol = returns.rolling(window=21).std()
+                                
+                                # Prepare data for plotting
+                                for date, vol in zip(stock_data['Date'].iloc[20:], rolling_vol.iloc[20:]):
+                                    volatility_data.append({
+                                        'Date': date,
+                                        'Volatility': vol,
+                                        'Stock': stock
+                                    })
+                    
+                    if volatility_data:
+                        vol_df = pd.DataFrame(volatility_data)
+                        
+                        # Create volatility chart
+                        fig_volatility = px.line(
+                            vol_df,
+                            x='Date',
+                            y='Volatility',
+                            color='Stock',
+                            title="21-Day Rolling Volatility of Daily Returns",
+                            labels={'Volatility': 'Volatility'}
+                        )
+                        fig_volatility.update_layout(
+                            height=400,
+                            xaxis_title="Date",
+                            yaxis_title="Volatility",
+                            hovermode='x unified'
+                        )
+                        st.plotly_chart(fig_volatility, width='stretch')
+                        
+                        # Volatility distribution
+                        fig_vol_dist = px.histogram(
+                            vol_df,
+                            x='Volatility',
+                            color='Stock',
+                            nbins=30,
+                            title="Distribution of Rolling Volatility",
+                            opacity=0.7,
+                            barmode='overlay',
+                            labels={'Volatility': '21-Day Rolling Volatility'}
+                        )
+                        fig_vol_dist.update_layout(
+                            height=400,
+                            xaxis_title="Volatility",
+                            yaxis_title="Frequency"
+                        )
+                        st.plotly_chart(fig_vol_dist, width='stretch')
+                    else:
+                        st.info("Need at least 21 days of 'daily_return' data for volatility calculation.")
+                    
+                    # 3. Feature Correlation Analysis
+                    st.markdown("##### 🔗 Feature Correlations")
+                    
+                    # Select features to analyze
+                    available_features = [col for col in filtered_df.columns 
+                                         if col not in ['Date', 'stock', 'y', 'stock_fwd_ret_21d', 'sp500_fwd_ret_21d']]
+                    
+                    selected_features = st.multiselect(
+                        "Select features for correlation analysis",
+                        available_features[:10],  # Limit to first 10 for performance
+                        default=available_features[:3] if len(available_features) >= 3 else available_features
+                    )
+                    
+                    if len(selected_features) >= 2:
+                        # Create correlation matrix
+                        corr_data = filtered_df[selected_features].corr()
+                        
+                        fig_corr = px.imshow(
+                            corr_data,
+                            text_auto='.2f',
+                            aspect="auto",
+                            color_continuous_scale='RdBu_r',
+                            title="Correlation Matrix of Selected Features",
+                            zmin=-1,
+                            zmax=1
+                        )
+                        fig_corr.update_layout(
+                            height=500,
+                            width=500
+                        )
+                        st.plotly_chart(fig_corr, width='stretch')
+                    
+                    st.markdown("---")
+                    
+                    # 4. Feature Comparison Over Time (WITH STOCK TOGGLE)
+                    st.markdown("##### 📈 Multiple Features Comparison")
+                    
+                    # Create columns for better layout
+                    col_feat1, col_feat2, col_stock = st.columns([2, 2, 1])
+                    
+                    with col_feat1:
+                        # Feature selection
+                        comparison_features = st.multiselect(
+                            "Select features to compare",
+                            available_features[:8],  # Show first 8 features
+                            default=available_features[:2] if len(available_features) >= 2 else available_features[:1],
+                            key="feature_comparison_select"
+                        )
+                    
+                    with col_feat2:
+                        # Chart type selection
+                        chart_type = st.selectbox(
+                            "Chart type",
+                            ["Line Chart", "Area Chart", "Scatter Plot"],
+                            key="chart_type_select"
+                        )
+                    
+                    with col_stock:
+                        # Single stock selection for comparison
+                        comparison_stock = st.selectbox(
+                            "Select stock",
+                            selected_stocks,
+                            key="comparison_stock_select"
+                        )
+                    
+                    if comparison_features and comparison_stock:
+                        stock_data = filtered_df[filtered_df['stock'] == comparison_stock].sort_values('Date')
+                        
+                        # Check if we have enough data
+                        if len(stock_data) == 0:
+                            st.warning(f"No data available for {comparison_stock} in the selected date range.")
+                        else:
+                            # Create the comparison chart
+                            fig_comparison = go.Figure()
+                            
+                            # Track if we found any features
+                            features_found = False
+                            
+                            for feature in comparison_features:
+                                if feature in stock_data.columns:
+                                    features_found = True
+                                    feature_data = stock_data[feature].dropna()
+                                    
+                                    if len(feature_data) > 0:
+                                        if chart_type == "Line Chart":
+                                            fig_comparison.add_trace(go.Scatter(
+                                                x=stock_data['Date'],
+                                                y=stock_data[feature],
+                                                name=feature,
+                                                mode='lines',
+                                                opacity=0.8
+                                            ))
+                                        elif chart_type == "Area Chart":
+                                            fig_comparison.add_trace(go.Scatter(
+                                                x=stock_data['Date'],
+                                                y=stock_data[feature],
+                                                name=feature,
+                                                mode='lines',
+                                                fill='tozeroy',
+                                                opacity=0.3
+                                            ))
+                                        elif chart_type == "Scatter Plot":
+                                            fig_comparison.add_trace(go.Scatter(
+                                                x=stock_data['Date'],
+                                                y=stock_data[feature],
+                                                name=feature,
+                                                mode='markers',
+                                                marker=dict(size=6, opacity=0.7)
+                                            ))
+                            
+                            if features_found:
+                                fig_comparison.update_layout(
+                                    title=f"Feature Comparison for {comparison_stock}",
+                                    height=500,
+                                    xaxis_title="Date",
+                                    yaxis_title="Feature Value",
+                                    hovermode='x unified',
+                                    legend=dict(
+                                        orientation="h",
+                                        yanchor="bottom",
+                                        y=1.02,
+                                        xanchor="right",
+                                        x=1
+                                    )
+                                )
+                                
+                                # Add a button to normalize/standardize the features for better comparison
+                                col_norm, col_empty = st.columns([1, 3])
+                                with col_norm:
+                                    normalize = st.checkbox("Normalize features", value=False)
+                                
+                                if normalize:
+                                    # Normalize each feature to 0-1 range for better comparison
+                                    fig_comparison_normalized = go.Figure()
+                                    
+                                    for feature in comparison_features:
+                                        if feature in stock_data.columns:
+                                            feature_data = stock_data[feature].dropna()
+                                            if len(feature_data) > 1:
+                                                # Min-max normalization
+                                                min_val = feature_data.min()
+                                                max_val = feature_data.max()
+                                                if max_val != min_val:
+                                                    normalized = (feature_data - min_val) / (max_val - min_val)
+                                                    
+                                                    if chart_type == "Line Chart":
+                                                        fig_comparison_normalized.add_trace(go.Scatter(
+                                                            x=stock_data['Date'],
+                                                            y=normalized,
+                                                            name=f"{feature} (normalized)",
+                                                            mode='lines',
+                                                            opacity=0.8
+                                                        ))
+                                    
+                                    if len(fig_comparison_normalized.data) > 0:
+                                        fig_comparison_normalized.update_layout(
+                                            title=f"Normalized Feature Comparison for {comparison_stock}",
+                                            height=500,
+                                            xaxis_title="Date",
+                                            yaxis_title="Normalized Value (0-1)",
+                                            hovermode='x unified',
+                                            legend=dict(
+                                                orientation="h",
+                                                yanchor="bottom",
+                                                y=1.02,
+                                                xanchor="right",
+                                                x=1
+                                            )
+                                        )
+                                        st.plotly_chart(fig_comparison_normalized, width='stretch')
+                                    else:
+                                        st.plotly_chart(fig_comparison, width='stretch')
+                                else:
+                                    st.plotly_chart(fig_comparison, width='stretch')
+                                
+                                # Show feature statistics table
+                                st.markdown("##### 📊 Feature Statistics")
+                                
+                                stats_data = []
+                                for feature in comparison_features:
+                                    if feature in stock_data.columns:
+                                        feature_data = stock_data[feature].dropna()
+                                        if len(feature_data) > 0:
+                                            stats_data.append({
+                                                'Feature': feature,
+                                                'Mean': round(feature_data.mean(), 4),
+                                                'Std Dev': round(feature_data.std(), 4),
+                                                'Min': round(feature_data.min(), 4),
+                                                'Max': round(feature_data.max(), 4),
+                                                'Data Points': len(feature_data)
+                                            })
+                                
+                                if stats_data:
+                                    stats_df = pd.DataFrame(stats_data)
+                                    st.dataframe(stats_df, width='stretch')
+                            else:
+                                st.info("Selected features not found in the dataset for the chosen stock.")
+                    
+                    # 5. Cross-Stock Feature Comparison (NEW)
+                    st.markdown("##### 🔄 Cross-Stock Feature Comparison")
+                    
+                    if len(selected_stocks) >= 2 and len(comparison_features) >= 1:
+                        cross_stock_feature = st.selectbox(
+                            "Select feature to compare across stocks",
+                            comparison_features if comparison_features else available_features[:3],
+                            key="cross_stock_feature"
+                        )
+                        
+                        if cross_stock_feature:
+                            # Prepare data for comparison
+                            cross_data = []
+                            for stock in selected_stocks:
+                                stock_data = filtered_df[filtered_df['stock'] == stock].sort_values('Date')
+                                if cross_stock_feature in stock_data.columns:
+                                    feature_data = stock_data[cross_stock_feature].dropna()
+                                    if len(feature_data) > 0:
+                                        cross_data.append({
+                                            'Stock': stock,
+                                            'Mean': feature_data.mean(),
+                                            'Std Dev': feature_data.std(),
+                                            'Min': feature_data.min(),
+                                            'Max': feature_data.max()
+                                        })
+                            
+                            if len(cross_data) >= 2:
+                                cross_df = pd.DataFrame(cross_data)
+                                
+                                # Bar chart comparison
+                                fig_cross = px.bar(
+                                    cross_df,
+                                    x='Stock',
+                                    y='Mean',
+                                    error_y='Std Dev',
+                                    title=f"Mean {cross_stock_feature} Comparison Across Stocks",
+                                    color='Stock',
+                                    labels={'Mean': f'Mean {cross_stock_feature}'}
+                                )
+                                fig_cross.update_layout(height=400)
+                                st.plotly_chart(fig_cross, width='stretch')
+                                
+                                # Show comparison table
+                                st.dataframe(cross_df, width='stretch')
+                    
+            except Exception as e:
+                st.error(f"Error analyzing features: {e}")
         
         st.markdown("---")
         
@@ -515,7 +840,7 @@ elif page == "🔧 Feature Engineering":
             hover_data=['Count']
         )
         fig_treemap.update_layout(height=500)
-        st.plotly_chart(fig_treemap, use_container_width=True)
+        st.plotly_chart(fig_treemap, width='stretch')
         
         # Parallel coordinates for feature analysis
         st.markdown("##### 📐 Feature Characteristics Analysis")
@@ -543,7 +868,7 @@ elif page == "🔧 Feature Engineering":
             }
         )
         fig_parallel.update_layout(height=500)
-        st.plotly_chart(fig_parallel, use_container_width=True)
+        st.plotly_chart(fig_parallel, width='stretch')
 
 # ============================================================
 # PAGE 6: MODEL RESULTS
@@ -560,7 +885,7 @@ elif page == "🤖 Model Results":
         rf_df = data['rf_results']
         
         # Display table
-        st.dataframe(rf_df, use_container_width=True)
+        st.dataframe(rf_df, width='stretch')
         
         # Bar chart
         fig = px.bar(
@@ -574,7 +899,7 @@ elif page == "🤖 Model Results":
         )
         fig.update_traces(texttemplate='%{text:.2%}', textposition='outside')
         fig.update_layout(height=400)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     
     # GBM Results
     if 'gbm_results' in data:
@@ -583,7 +908,7 @@ elif page == "🤖 Model Results":
         gbm_df = data['gbm_results']
         
         # Display table
-        st.dataframe(gbm_df, use_container_width=True)
+        st.dataframe(gbm_df, width='stretch')
         
         # Bar chart
         fig = px.bar(
@@ -597,7 +922,7 @@ elif page == "🤖 Model Results":
         )
         fig.update_traces(texttemplate='%{text:.3f}', textposition='outside')
         fig.update_layout(height=400)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     
     st.markdown("---")
     
@@ -695,7 +1020,7 @@ elif page == "🤖 Model Results":
             title="Performance Metrics Comparison (Best Scenarios)"
         )
         
-        st.plotly_chart(fig_radar, use_container_width=True)
+        st.plotly_chart(fig_radar, width='stretch')
         
         # 2. Model Improvement Heatmap
         st.markdown("##### 🔥 Data Preparation Impact Heatmap")
@@ -728,7 +1053,7 @@ elif page == "🤖 Model Results":
                 labels=dict(x="Model", y="Data Prep Strategy", color="Improvement (%)")
             )
             fig_heatmap.update_layout(height=400)
-            st.plotly_chart(fig_heatmap, use_container_width=True)
+            st.plotly_chart(fig_heatmap, width='stretch')
 
 # ============================================================
 # PAGE 7: PERFORMANCE ANALYSIS
@@ -780,7 +1105,7 @@ elif page == "📈 Performance Analysis":
             color_discrete_map={'Random Forest': '#636EFA', 'GBM': '#EF553B'}
         )
         fig.update_layout(height=500)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     
     st.markdown("---")
     
@@ -858,7 +1183,7 @@ elif page == "📈 Performance Analysis":
             yaxis=dict(tickformat=".0%", range=[0.45, 0.55])  # Adjusted range for your data
         )
         
-        st.plotly_chart(fig_timeline, use_container_width=True)
+        st.plotly_chart(fig_timeline, width='stretch')
         
         # Improvement bar chart
         fig_improvement = px.bar(
@@ -879,7 +1204,7 @@ elif page == "📈 Performance Analysis":
             xaxis_title="Data Preparation Stage",
             yaxis_title="Improvement (%)"
         )
-        st.plotly_chart(fig_improvement, use_container_width=True)
+        st.plotly_chart(fig_improvement, width='stretch')
 
 # Footer
 st.markdown("---")
