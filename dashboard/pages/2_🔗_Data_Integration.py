@@ -11,13 +11,13 @@ st.sidebar.header("Data Integration")
 
 data = load_data()
 
-st.header("Data Integration & Schema")
+st.header("Integrated Schema Overview")
     
 if 'raw' in data:
     df = data['raw']
 
     # Schema overview
-    st.subheader("Integrated Schema")
+    # st.subheader("Integrated Schema")
 
     col1, col2 = st.columns(2)
 
@@ -40,14 +40,52 @@ if 'raw' in data:
         "Sector ETFs": [c for c in df.columns if c.startswith('sector_')],
         "Technical Indicators": [c for c in df.columns if 'RSI' in c or 'SMA' in c]
     }
+    # Create a 2-column layout
+    col1, col2 = st.columns(2)
 
-    for category, cols in categories.items():
+    # Split categories between columns
+    all_categories = list(categories.items())
+    mid_point = len(all_categories) // 2
+
+    for idx, (category, cols) in enumerate(all_categories):
         matching_cols = [c for c in cols if c in df.columns]
         if matching_cols:
-            with st.expander(f"**{category}** ({len(matching_cols)} columns)"):
-                st.write(", ".join(matching_cols))
-
-    # Enhanced Time Series Analysis
+            # Choose which column to use
+            current_col = col1 if idx < mid_point else col2
+            
+            with current_col:
+                # Create a card for each category
+                st.markdown(f"""
+                <div style="
+                    padding: 1.2rem;
+                    margin-bottom: 1rem;
+                    border-radius: 0.5rem;
+                    background: #3F77C0;
+                    color: white;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                ">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.8rem;">
+                        <h4 style="margin: 0; font-size: 1.1rem;">{category}</h4>
+                        <span style="
+                            background-color: rgba(255,255,255,0.2);
+                            padding: 0.2rem 0.6rem;
+                            border-radius: 1rem;
+                            font-size: 0.8rem;
+                            font-weight: bold;
+                        ">{len(matching_cols)} cols</span>
+                    </div>
+                    <div style="
+                        padding: 0.8rem;
+                        border-radius: 0.3rem;
+                        font-size: 1.1rem;
+                        line-height: 2;
+                    ">
+                        {', '.join(f'<code style="color:#FFFFFF; background-color: rgba(255,255,255,0.1); padding: 0.3rem 0.3rem; border-radius: 0.2rem; margin-right: 0.3rem;">{col}</code>' for col in matching_cols)}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                        
+    st.markdown("---")
     st.subheader("📈 Time Series Trends")
 
     col1, col2 = st.columns(2)
@@ -113,8 +151,8 @@ if 'raw' in data:
         except:
             st.info("Could not create correlation matrix")
 
-    # Data completeness heatmap
-    st.subheader("Data Completeness by Source")
+    # Data completeness bar chart
+    st.subheader("Data Completeness Distribution")
 
     null_pct = (df.isnull().sum() / len(df) * 100).sort_values(ascending=False)
     null_pct = null_pct[null_pct > 0]
