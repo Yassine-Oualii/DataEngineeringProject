@@ -1,4 +1,21 @@
-# Data Preparation Comparison Walkthrough
+# Stock Market Classification 
+
+## Dashboard Application
+
+To run the interactive dashboard:
+
+1. Clone the repository: `git clone https://github.com/Yassine-Oualii/DataEngineeringProject.git`
+2. Open the repo in a code editor (like VSCode)
+3. Within the project directory:
+   1. Install the `requirements.txt` (preferably in a virtual env (*.venv*)): `pip install requirements.txt`
+4. Navigate to the `dashboard/` directory and run the app:
+   ```(bash)
+    DataEngineeringProject> cd ./dashboard
+    DataEngineeringProject/dashboard> streamlit run Dashboard.py
+   ```
+5. The dashboard should launch and open in your default browser
+---
+## Data Preparation Comparison Walkthrough
 
 This document showcases how different data preparation techniques enhance ML model accuracy for predicting stock performance (Stock vs SP500).
 
