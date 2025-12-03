@@ -165,3 +165,13 @@ def create_outlier_box_plot(data, column):
 
     fig.update_layout(title=f"Box Plot of: {column}", xaxis_title=column)
     return fig
+
+def get_tools_used():
+    data = {
+    'Category': ['Language', 'Data APIs', 'Data Processing', 'ML Frameworks', 
+                 'Visualization', 'File Formats', 'Development'],
+    'Tools': ['Python 3.11', 'yfinance, FRED API, Alpha Vantage', 'pandas, numpy',
+              'scikit-learn, h2o', 'Streamlit, Plotly, matplotlib', 
+              'CSV (data storage), Markdown (reports)', 'VS Code, Git']
+    }
+    return pd.DataFrame(data)
