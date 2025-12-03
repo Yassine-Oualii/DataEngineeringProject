@@ -7,52 +7,66 @@ Provides concrete examples of detected outliers.
 
 import pandas as pd
 import numpy as np
+from typing import Tuple
 
-def detect_outliers_zscore(df, col, threshold=3):
+def detect_outliers_zscore(df: pd.DataFrame, col: str, threshold: float = 3.0) -> Tuple[pd.Series, pd.Series]:
     """
     Detect outliers using Z-score method.
     Values beyond threshold standard deviations are outliers.
+    z-scores should be a Series of absolute z-scores for the column.
+    outliers is a boolean Series where True indicates an outlier.
     """
-    mean = df[col].mean()
-    std = df[col].std()
-    
-    if std == 0:
-        return pd.Series(False, index=df.index)
-    
-    z_scores = np.abs((df[col] - mean) / std)
+    # Coerce values to numeric (safest for mixed-type columns)
+    vals = pd.to_numeric(df[col], errors='coerce')
+    mean = vals.mean()
+    std = vals.std()
+
+    # If std is zero or NaN (constant or all-NaN column), return no outliers
+    if std == 0 or np.isnan(std):
+        outliers = pd.Series(False, index=df.index)
+        z_scores = pd.Series(0.0, index=df.index)
+        return outliers, z_scores
+
+    # compute absolute z-scores
+    z_scores = (vals - mean).abs() / std
     outliers = z_scores > threshold
-    
+
     return outliers, z_scores
 
-def detect_outliers_iqr(df, col, multiplier=1.5):
+def detect_outliers_iqr(df: pd.DataFrame, col: str, multiplier: float = 1.5) -> pd.Series:
     """
     Detect outliers using IQR (Interquartile Range) method.
     Values beyond Q1 - 1.5*IQR or Q3 + 1.5*IQR are outliers.
     """
-    Q1 = df[col].quantile(0.25)
-    Q3 = df[col].quantile(0.75)
+    # Coerce to numeric to avoid errors with mixed-type columns
+    vals = pd.to_numeric(df[col], errors='coerce')
+    Q1 = vals.quantile(0.25)
+    Q3 = vals.quantile(0.75)
     IQR = Q3 - Q1
-    
+
     lower_bound = Q1 - multiplier * IQR
     upper_bound = Q3 + multiplier * IQR
-    
-    outliers = (df[col] < lower_bound) | (df[col] > upper_bound)
-    
+
+    outliers = (vals < lower_bound) | (vals > upper_bound)
+
+    # ensure same index as original df
+    outliers = pd.Series(outliers, index=df.index)
+
     return outliers
 
-def main():
-    """
-    Main outlier detection function.
-    """
-    print("=" * 70)
-    print("OUTLIER DETECTION ANALYSIS")
-    print("=" * 70)
+# def main():
+#     """
+#     Main outlier detection function.
+#     """
+#     print("=" * 70)
+#     print("OUTLIER DETECTION ANALYSIS")
+#     print("=" * 70)
     
-    # Load data
-    print("\n1. Loading data...")
-    df = pd.read_csv('data/integrated_prepared_data.csv')
-    df['Date'] = pd.to_datetime(df['Date'])
-    print(f"   Loaded {len(df):,} rows, {len(df.columns)} columns")
+#     # Load data
+#     print("\n1. Loading data...")
+#     df = pd.read_csv('data/integrated_prepared_data.csv')
+#     df['Date'] = pd.to_datetime(df['Date'])
+#     print(f"   Loaded {len(df):,} rows, {len(df.columns)} columns")
     
 def remove_outliers(df, zscore_results=None, iqr_results=None, method='zscore'):
     """
@@ -171,6 +185,10 @@ def main():
     df = pd.read_csv('data/integrated_prepared_data.csv')
     df['Date'] = pd.to_datetime(df['Date'])
     print(f"   Loaded {len(df):,} rows, {len(df.columns)} columns")
+    # Determine numeric columns here as well for use later in main
+    numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+    exclude_cols = ['Date']
+    numeric_cols = [col for col in numeric_cols if col not in exclude_cols]
     
     zscore_results, iqr_results = analyze_outliers(df)
     
