@@ -1,8 +1,10 @@
+import plotly
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from utils import get_data, create_page_header, get_data_distribution, plot_data_distribution
+import plotly.tools as tls
+from utils import get_data, create_page_header, get_data_distribution, plot_data_distribution, create_box_plot
 
 st.set_page_config(
     page_title="Data Distribution",
@@ -40,7 +42,7 @@ else:
     st.markdown("---")
     
     # Distribution Statistics
-    st.subheader("📈 Distribution Statistics")
+    st.subheader("📈 Quick Statistics")
     
     if dataset_option == "Prepared Data":
         stats = get_data_distribution(df, selected_col)
@@ -64,27 +66,30 @@ else:
         st.metric("Q1 (25%)", f"{stats['q25']:.2f}")
     with col2:
         st.metric("Q3 (75%)", f"{stats['q75']:.2f}")
-    
+
+    st.write(analyze_df[selected_col].describe())
     st.markdown("---")
     
     # Distribution Plot
     st.subheader("📉 Distribution Histogram")
     try:
         fig = plot_data_distribution(analyze_df, selected_col, bins=40)
-        st.pyplot(fig)
+        st.plotly_chart(fig)
     except Exception as e:
         st.error(f"Error plotting distribution: {e}")
     
     # Box Plot
     st.subheader("📦 Box Plot")
     try:
-        fig, ax = plt.subplots(figsize=(10, 4))
-        analyze_df[selected_col].dropna().plot(kind='box', ax=ax, vert=False)
-        ax.set_title(f"Box Plot of {selected_col}")
-        st.pyplot(fig)
+        # fig, ax = plt.subplots(figsize=(10, 4))
+        # analyze_df[selected_col].dropna().plot(kind='box', ax=ax, vert=False)
+        # ax.set_title(f"Box Plot of {selected_col}")
+        # st.pyplot(fig)
+        fig = create_box_plot(analyze_df, selected_col)
+        st.plotly_chart(fig)
     except Exception as e:
         st.error(f"Error plotting box plot: {e}")
     
-    # Data Summary
-    st.subheader("📋 Data Summary")
-    st.write(analyze_df[selected_col].describe())
+    # # Data Summary
+    # st.subheader("📋 Data Summary")
+    # st.write(analyze_df[selected_col].describe())

@@ -34,6 +34,7 @@ if 'ml' in data:
             with st.expander(f"**{category}** ({len(available)} features)"):
                 st.write(", ".join(available))
     
+    st.markdown("---")
     # Target variable distribution
     st.subheader("Target Variable Distribution")
     
@@ -65,7 +66,7 @@ if 'ml' in data:
     st.markdown("---")
     
     # ENGINEERED FEATURES ANALYSIS SECTION
-    st.subheader("📈 Engineered Features Analysis")
+    st.header("📈 Engineered Features Analysis")
     
     col1, col2 = st.columns(2)
     
@@ -105,7 +106,7 @@ if 'ml' in data:
                 st.warning("No data available for the selected date range and stocks.")
             else:
                 # 1. Daily Returns Analysis
-                st.markdown("##### 📊 Daily Returns Analysis")
+                st.markdown("#### 1. Daily Returns Analysis")
                 
                 if 'daily_return' in filtered_df.columns:
                     # Create line chart of daily returns
@@ -146,7 +147,7 @@ if 'ml' in data:
                     st.info("'daily_return' feature not available in the dataset")
                 
                 # 2. Volatility Analysis (21-day rolling)
-                st.markdown("##### 🌊 Rolling Volatility Analysis")
+                st.markdown("#### 2. Rolling Volatility Analysis")
                 
                 volatility_data = []
                 
@@ -209,7 +210,7 @@ if 'ml' in data:
                     st.info("Need at least 21 days of 'daily_return' data for volatility calculation.")
                 
                 # 3. Feature Correlation Analysis
-                st.markdown("##### 🔗 Feature Correlations")
+                st.header("Feature Correlation and Comparison")
                 
                 # Select features to analyze
                 available_features = [col for col in filtered_df.columns 
@@ -244,7 +245,7 @@ if 'ml' in data:
                 st.markdown("---")
                 
                 # 4. Feature Comparison Over Time (WITH STOCK TOGGLE)
-                st.markdown("##### 📈 Multiple Features Comparison")
+                st.subheader(" Multiple Features Comparison")
                 
                 # Create columns for better layout
                 col_feat1, col_feat2, col_stock = st.columns([2, 2, 1])
@@ -386,7 +387,7 @@ if 'ml' in data:
                                 st.plotly_chart(fig_comparison, width='stretch')
                             
                             # Show feature statistics table
-                            st.markdown("##### 📊 Feature Statistics")
+                            st.markdown("##### Feature Statistics")
                             
                             stats_data = []
                             for feature in comparison_features:
@@ -408,8 +409,8 @@ if 'ml' in data:
                         else:
                             st.info("Selected features not found in the dataset for the chosen stock.")
                 
-                # 5. Cross-Stock Feature Comparison (NEW)
-                st.markdown("##### 🔄 Cross-Stock Feature Comparison")
+                # 5. Cross-Stock Feature Comparison 
+                st.header("🔄 Cross-Stock Feature Comparison")
                 
                 if len(selected_stocks) >= 2 and len(comparison_features) >= 1:
                     cross_stock_feature = st.selectbox(
@@ -457,58 +458,3 @@ if 'ml' in data:
             st.error(f"Error analyzing features: {e}")
     
     st.markdown("---")
-    
-    # Feature Importance Visualization (Based on your results)
-    st.subheader("📊 Hypothetical Feature Importance Analysis")
-    
-    # Based on your model results, we can simulate feature categories impact
-    # Create feature categories importance chart
-    feature_impact_data = {
-        "Feature Category": ["Technical Indicators", "Price Features", "Market Indicators", 
-                            "Macro Features", "Sector Features", "Relative Features"],
-        "Hypothetical Importance": [25, 22, 18, 15, 12, 8],
-        "Count": [6, 9, 5, 4, 5, 2]  # Number of features in each category
-    }
-    
-    feature_df = pd.DataFrame(feature_impact_data)
-    
-    # Treemap visualization
-    fig_treemap = px.treemap(
-        feature_df,
-        path=['Feature Category'],
-        values='Hypothetical Importance',
-        color='Count',
-        color_continuous_scale='Blues',
-        title="Feature Categories Impact Distribution",
-        hover_data=['Count']
-    )
-    fig_treemap.update_layout(height=500)
-    st.plotly_chart(fig_treemap, width='stretch')
-    
-    # Parallel coordinates for feature analysis
-    st.markdown("##### 📐 Feature Characteristics Analysis")
-    
-    # Create synthetic data for demonstration
-    synthetic_features = pd.DataFrame({
-        'Feature': ['daily_return', 'sp500_daily_return', 'VIX_t', 'sector_XLK_t', 
-                    'MA20_ratio', 'relative_return', 'Put_Call_Ratio_t'],
-        'Volatility': [8.5, 7.2, 9.8, 6.3, 5.1, 7.9, 8.2],
-        'Correlation_with_Target': [0.45, 0.38, 0.52, 0.31, 0.42, 0.48, 0.39],
-        'Missing_Rate': [0.02, 0.01, 0.15, 0.08, 0.03, 0.05, 0.12],
-        'Feature_Type': ['Price', 'Benchmark', 'Macro', 'Sector', 'Technical', 'Relative', 'Market']
-    })
-    
-    fig_parallel = px.parallel_categories(
-        synthetic_features,
-        dimensions=['Feature_Type', 'Volatility', 'Correlation_with_Target'],
-        color='Correlation_with_Target',
-        color_continuous_scale=px.colors.sequential.Viridis,
-        title="Feature Characteristics Parallel Categories",
-        labels={
-            'Feature_Type': 'Feature Type',
-            'Volatility': 'Volatility Score',
-            'Correlation_with_Target': 'Target Correlation'
-        }
-    )
-    fig_parallel.update_layout(height=500)
-    st.plotly_chart(fig_parallel, width='stretch')

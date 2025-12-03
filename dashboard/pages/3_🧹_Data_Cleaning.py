@@ -9,10 +9,30 @@ st.set_page_config(page_title="Data Cleaning", page_icon="🧹", layout="wide")
 st.markdown("# Data Cleaning")
 st.sidebar.header("Data Cleaning")
 data = load_data()
-st.header("Data Cleaning Process")
+
+# Show distribution before cleaning
+
+# Data completeness bar chart
+st.subheader("Data Completeness Distribution")
+if 'raw' in data:
+    df = data['raw']
+    null_pct = (df.isnull().sum() / len(df) * 100).sort_values(ascending=False)
+    null_pct = null_pct[null_pct > 0]
+
+    if len(null_pct) > 0:
+        fig = px.bar(
+            x=null_pct.index,
+            y=null_pct.values,
+            title="Missing Data per Column (%)",
+            labels={'x': 'Column', 'y': 'Missing %'}
+        )
+        fig.update_layout(height=400)
+        st.plotly_chart(fig, width='stretch')
+    else:
+        st.success("✅ No missing data in integrated dataset!")
     
-    # Null handling
-st.subheader("1️⃣ Null Value Handling")
+# Null handling
+st.subheader("Null Value Handling")
 
 if 'raw' in data and 'prepared' in data:
     raw_nulls = data['raw'].isnull().sum().sum()
@@ -30,7 +50,7 @@ if 'raw' in data and 'prepared' in data:
     st.info("**Strategy**: Smart imputation - Forward/backward fill for macro data, forward fill for stock prices, linear interpolation for scattered missing values")
 
 # Outlier detection
-st.subheader("2️⃣ Outlier Detection & Removal")
+st.subheader("Outlier Detection & Removal")
 
 if 'outliers' in data:
     outlier_df = data['outliers']
@@ -39,13 +59,13 @@ if 'outliers' in data:
     st.dataframe(outlier_df, width='stretch')
     
     # Visualization
-    if 'column' in outlier_df.columns and 'outliers_detected' in outlier_df.columns:
-        top_outliers = outlier_df.nlargest(10, 'outliers_detected')
+    if 'column' in outlier_df.columns and 'zscore_outliers' in outlier_df.columns:
+        top_outliers = outlier_df.nlargest(10, 'zscore_outliers')
         
         fig = px.bar(
             top_outliers,
             x='column',
-            y='outliers_detected',
+            y='zscore_outliers',
             title='Top 10 Columns by Outliers Detected (Z-score > 3)',
             labels={'outliers_detected': 'Number of Outliers'}
         )

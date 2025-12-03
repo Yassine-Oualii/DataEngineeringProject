@@ -12,9 +12,9 @@ st.sidebar.header("Data Integration")
 data = load_data()
 
 st.header("Integrated Schema Overview")
-    
-if 'raw' in data:
-    df = data['raw']
+
+if "raw" in data:
+    df = data["raw"]
 
     # Schema overview
     # st.subheader("Integrated Schema")
@@ -34,11 +34,11 @@ if 'raw' in data:
 
     categories = {
         "Stock Data (OHLCV)": ["Close", "High", "Low", "Open", "Volume"],
-        "S&P 500 Benchmark": [c for c in df.columns if c.startswith('sp500_')],
+        "S&P 500 Benchmark": [c for c in df.columns if c.startswith("sp500_")],
         "Macro Indicators": ["CPI", "GDP", "Fed_Funds_Rate", "Unemployment_Rate"],
         "Market Indicators": ["VIX", "Put_Call_Ratio", "Market_Breadth"],
-        "Sector ETFs": [c for c in df.columns if c.startswith('sector_')],
-        "Technical Indicators": [c for c in df.columns if 'RSI' in c or 'SMA' in c]
+        "Sector ETFs": [c for c in df.columns if c.startswith("sector_")],
+        "Technical Indicators": [c for c in df.columns if "RSI" in c or "SMA" in c],
     }
     # Create a 2-column layout
     col1, col2 = st.columns(2)
@@ -52,10 +52,11 @@ if 'raw' in data:
         if matching_cols:
             # Choose which column to use
             current_col = col1 if idx < mid_point else col2
-            
+
             with current_col:
                 # Create a card for each category
-                st.markdown(f"""
+                st.markdown(
+                    f"""
                 <div style="
                     padding: 1.2rem;
                     margin-bottom: 1rem;
@@ -83,8 +84,10 @@ if 'raw' in data:
                         {', '.join(f'<code style="color:#FFFFFF; background-color: rgba(255,255,255,0.1); padding: 0.3rem 0.3rem; border-radius: 0.2rem; margin-right: 0.3rem;">{col}</code>' for col in matching_cols)}
                     </div>
                 </div>
-                """, unsafe_allow_html=True)
-                        
+                """,
+                    unsafe_allow_html=True,
+                )
+
     st.markdown("---")
     st.subheader("📈 Time Series Trends")
 
@@ -92,81 +95,35 @@ if 'raw' in data:
 
     with col1:
         # Select stocks for analysis
-        stocks = df['stock'].unique()[:5]  # Limit to first 5 stocks for clarity
+        stocks = df["stock"].unique()[:5]  # Limit to first 5 stocks for clarity
         selected_stocks = st.multiselect(
-            "Select stocks for analysis",
-            stocks,
-            default=stocks[:2]
+            "Select stocks for analysis", stocks, default=stocks[:2]
         )
 
     with col2:
         # Select time period
         date_range = st.date_input(
-            "Select date range",
-            [df['Date'].min().date(), df['Date'].max().date()]
+            "Select date range", [df["Date"].min().date(), df["Date"].max().date()]
         )
 
     if selected_stocks and len(date_range) == 2:
         # Filter data
-        mask = (df['stock'].isin(selected_stocks)) & \
-                (df['Date'] >= pd.to_datetime(date_range[0])) & \
-                (df['Date'] <= pd.to_datetime(date_range[1]))
+        mask = (
+            (df["stock"].isin(selected_stocks))
+            & (df["Date"] >= pd.to_datetime(date_range[0]))
+            & (df["Date"] <= pd.to_datetime(date_range[1]))
+        )
         filtered_df = df[mask]
-        
-                    # Simple price comparison
+
+        # Simple price comparison
         fig = px.line(
             filtered_df,
-            x='Date',
-            y='Close',
-            color='stock',
-            title=f'Stock Prices: {date_range[0]} to {date_range[1]}'
+            x="Date",
+            y="Close",
+            color="stock",
+            title=f"Stock Prices: {date_range[0]} to {date_range[1]}",
         )
         fig.update_layout(height=400)
-        st.plotly_chart(fig, width='stretch')
-        
-        # Simple correlation heatmap
-        try:
-            pivot_data = filtered_df.pivot_table(
-                index='Date',
-                columns='stock',
-                values='Close'
-            ).dropna()
-            
-            if len(pivot_data.columns) > 1:
-                correlation_matrix = pivot_data.corr()
-                
-                fig_corr = px.imshow(
-                    correlation_matrix,
-                    text_auto=True,
-                    aspect="auto",
-                    color_continuous_scale='RdBu_r',
-                    title="Stock Price Correlations",
-                    zmin=-1,
-                    zmax=1
-                )
-                # show annotations and format values to two decimals
-                fig_corr.update_traces(texttemplate='%{z:.2f}', textfont={'size':12})
-                fig_corr.update_layout(height=400)
-                st.plotly_chart(fig_corr, width='stretch')
-        except:
-            st.info("Could not create correlation matrix")
-
-    # Data completeness bar chart
-    st.subheader("Data Completeness Distribution")
-
-    null_pct = (df.isnull().sum() / len(df) * 100).sort_values(ascending=False)
-    null_pct = null_pct[null_pct > 0]
-
-    if len(null_pct) > 0:
-        fig = px.bar(
-            x=null_pct.index,
-            y=null_pct.values,
-            title="Missing Data by Column (%)",
-            labels={'x': 'Column', 'y': 'Missing %'}
-        )
-        fig.update_layout(height=400)
-        st.plotly_chart(fig, width='stretch')
-    else:
-        st.success("✅ No missing data in integrated dataset!")
+        st.plotly_chart(fig, width="stretch")
 
     st.markdown("---")

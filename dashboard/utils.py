@@ -8,6 +8,7 @@ import os
 import matplotlib.pyplot as plt
 import plotly.tools as tls
 import plotly.graph_objects as go
+import plotly.express as px
 
 @st.cache_data
 def load_data():
@@ -79,14 +80,25 @@ def get_data_distribution(data, column):
 
 def plot_data_distribution(data, column, bins=30):
     """Plot histogram and KDE for data distribution"""
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.hist(data[column].dropna(), bins=bins, edgecolor="black", alpha=0.7)
-    ax.set_xlabel(column)
-    ax.set_ylabel("Frequency")
-    ax.set_title(f"Distribution of {column}")
-    fig_plotly = tls.mpl_to_plotly(fig)
+    # fig, ax = plt.subplots(figsize=(10, 5))
+    # px.histogram(data[column].dropna(), nbins=bins)
+    # ax.set_xlabel(column)
+    # ax.set_ylabel("Frequency")
+    # ax.set_title(f"Distribution of {column}")
+    # fig_plotly = tls.mpl_to_plotly(fig)
     # return fig
-    return fig_plotly
+    fig = go.Figure()
+    fig.add_trace(
+        go.Histogram(
+            x=data[column].dropna(),
+            nbinsx=bins,
+            histnorm="probability density",
+            name="Histogram",
+            marker_color="lightblue",
+            opacity=0.75,
+        )
+    )
+    return fig
 
 
 def extract_feature_importance(results_df, top_n=10):
