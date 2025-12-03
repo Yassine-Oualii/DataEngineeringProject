@@ -1,4 +1,5 @@
 import code
+from math import pi
 import streamlit as st
 import pandas as pd
 from utils import load_data, get_tools_used
@@ -58,89 +59,171 @@ with col2:
     st.dataframe(simple_styled_df, width="stretch", hide_index=True)
 st.markdown("---")
 
-st.header("Code Organization per Pipeline Stage")
+st.header("Code Organization")
 
 # Data Collection
-st.subheader("1️⃣ Data Collection")
-st.caption("""`data.py` contains the RawDataCollector class which handles data collection from various sources
-            
-            """)
+# st.subheader("1️⃣ Data Collection from APIs")
+# st.badge("data.py", color="blue", icon=":material/code_blocks:")
+
+# st.caption("""Description: Contains the `RawDataCollector` class which handles data collection from various sources
+#            Output: Raw CSV files for each data source.""")
 # data.py snippet RawDataCollector class
-st.markdown("""**Snippet:**""")
-raw_data_collector_snippet = '''
-class RawDataCollector:
-    def __init__(self, start_date=START_DATE, end_date=END_DATE, data_dir=DATA_DIR):
-        self.start_date = start_date
-        self.end_date = end_date or datetime.now().strftime('%Y-%m-%d')
-        self.data_dir = data_dir
+# st.markdown("""**Snippet:**""")
+# raw_data_collector_snippet = '''
+# class RawDataCollector:
+#     def __init__(self, start_date=START_DATE, end_date=END_DATE, data_dir=DATA_DIR):
+#         self.start_date = start_date
+#         self.end_date = end_date or datetime.now().strftime('%Y-%m-%d')
+#         self.data_dir = data_dir
 
-    # ---------- Yahoo Finance ----------
-    def collect_yahoo(self, symbols):
-        for symbol in symbols:
-            print(f"Collecting {symbol} from Yahoo Finance...")
-            try:
-                df = yf.download(symbol, start=self.start_date, end=self.end_date, progress=False, auto_adjust=True)
-                df.to_csv(f'{self.data_dir}/{symbol}_raw.csv')
-            except Exception as e:
-                print(f"Error collecting {symbol}: {e}")
+#     # ---------- Yahoo Finance ----------
+#     def collect_yahoo(self, symbols):
+#         for symbol in symbols:
+#             print(f"Collecting {symbol} from Yahoo Finance...")
+#             try:
+#                 df = yf.download(symbol, start=self.start_date, end=self.end_date, progress=False, auto_adjust=True)
+#                 df.to_csv(f'{self.data_dir}/{symbol}_raw.csv')
+#             except Exception as e:
+#                 print(f"Error collecting {symbol}: {e}")
     
-    # ---------- FRED Economic Data ----------           
-    def collect_fred(self, fred_series, api_key)
+#     # ---------- FRED Economic Data ----------           
+#     def collect_fred(self, fred_series, api_key)
     
-    # ---------- Alpha Vantage Technical Indicators ----------
-    def collect_alpha_vantage(self, symbol, indicators)
+#     # ---------- Alpha Vantage Technical Indicators ----------
+#     def collect_alpha_vantage(self, symbol, indicators)
     
-    # ---------- Sentiment & Market Indicators ----------
-    def collect_sentiment(self)
-'''
-st.code(raw_data_collector_snippet, language='python')
+#     # ---------- Sentiment & Market Indicators ----------
+#     def collect_sentiment(self)
+# '''
+# st.code(raw_data_collector_snippet, language='python')
+# st.markdown("---")
+
+
+# # Data Integration
+# st.subheader("2️⃣ Data Integration")
+# # integrate_data.py snippet
+
+# # st.markdown("""**Scripts:**""" )
+# st.caption("`integrate_data.py` : Loads all raw CSV files, fixes MultiIndex issues, and integrates into one unified dataset. Each row represents a (stock, date) pair with all available raw data columns.")
+
+
+# # Data Cleaning
+# st.subheader("3️⃣ Data Cleaning")
+# # prepare_data.py snippet - imputation and outlier removal
+# # clean_ml_dataset.py snippet - removing null rows
+# st.caption("`prepare_data.py` : Imputation strategies (mean, median, forward-fill) and outlier removal techniques (IQR, Z-score) applied to raw dataset to create clean ML-ready dataset.")
+# st.caption("`clean_ml_dataset.py` : Further cleans the ML dataset by removing rows with any remaining null values after imputation.")
+
+# # Feature Scaling
+# st.subheader("4️⃣ Feature Scaling")
+# # scale_features.py snippet - StandardScaler, RobustScaler, MinMaxScaler
+# st.caption("`scale_features.py` : Applies appropriate scaling techniques (StandardScaler, RobustScaler, MinMaxScaler) to prepared dataset and documents all applied transformations.")
+
+# # Feature Engineering
+# st.subheader("5️⃣ Feature Engineering")
+# # create_features_and_label.py snippet
+# st.caption("`create_features_and_label.py` : Creates engineered features (X) and target variable (y) from integrated prepared data. Saves to a separate CSV file: `ml_features_and_labels.csv` ")
+
+# # Model Training & Results
+# st.subheader("6️⃣ Model Training & Results")
+
+# # jupyter notebook snippets for model training 
+# st.caption("**Traning Notebooks:**")
+# st.caption("`Logistic Regression Model.ipynb`")
+# st.caption("`Random Forest Model.ipynb`")
+# st.caption("`XGBoost Model.ipynb`")
+
+
+# # Performance Evaluation
+# st.subheader("7️⃣ Performance Evaluation")
+# st.caption("`compare_models.py` : Random Split Comparison (RF)")
+# st.caption("`compare_models_timeseries.py` : Time Series Comparison (RF)")
+# st.caption("`compare_models_timeseries_gbm.py` : Time Series Comparison (GBM)")
+# st.caption("`run_automl.py` : AutoML")
+# st.caption("`investigate_automl_leakage.py` : Helps discover H2O AutoML leakage: The 96.6% AUC was inflated due to it's default 5-fold Cross-Validation `(nfolds=5)` ")
+# st.caption("`investigate_overfitting.py` : Overfitting Investigation")
+
+
+
+
+# Define pipeline steps with metadata
+pipeline_steps = [
+    {
+        "file": "data.py",
+        "description": "└─Data collection from APIs",
+        "output": "Raw CSV files",
+        "rows": None,
+        "icon": ":material/code_blocks:",
+        "highlight": True,
+        "highlight_text": "DATA COLLECTION"
+    },
+    {
+        "file": "integrate_data.py",
+        "description": "└─Merge 10+ sources on (stock, Date)",
+        "output": "integrated_raw_data.csv (8,720 rows)",
+        "rows": "8,720",
+        "icon": ":material/code_blocks:",
+        "highlight": True,
+        "highlight_text": "DATA INTEGRATION"
+    },
+    {
+        "file": "prepare_data.py",
+        "description": "├─ Backward fill (CPI, GDP, Unemployment)\n├─ Forward fill (available but not used)\n└─ Interpolation (available but not used)",
+        "output": "integrated_prepared_data.csv (8,720 rows, 0 nulls)",
+        "rows": "8,720 rows, 0 nulls",
+        "icon": ":material/code_blocks:",
+        "highlight": True,
+        "highlight_text": "NULL HANDLING"
+    },
+    {
+        "file": "detect_outliers.py",
+        "description": "├─ Z-score calculation: (x - mean) / std\n├─ Threshold: |Z| > 3\n└─ Removes entire row if ANY column is outlier",
+        "output": "Dataset with 790 rows removed (7,930 rows)",
+        "rows": "7,930 rows",
+        "icon": ":material/code_blocks:",
+        "highlight": True,
+        "highlight_text": "Z-SCORE OUTLIER REMOVAL"
+    },
+    {
+        "file": "scale_features.py",
+        "description": "├─ StandardScaler: (x - mean) / std\n├─ Applied to: 24 columns (Volume, Prices, Macro)\n├─ MinMaxScaler: (x - min) / (max - min)\n├─ Applied to: 1 column (Put_Call_Ratio)\n└─ RobustScaler: (x - median) / IQR\n└─ Available but NOT USED",
+        "output": "integrated_scaled_data.csv",
+        "rows": None,
+        "icon": ":material/code_blocks:",
+        "highlight": True,
+        "highlight_text": "FEATURE SCALING"
+    },
+    {
+        "file": "create_features_and_labels.py",
+        "description": "├─ Creates 30+ features (returns, volatility, MA ratios)\n└─ Creates target variable y",
+        "output": "ml_features_and_labels.csv (7,930 rows)",
+        "rows": "7,930 rows",
+        "icon": ":material/code_blocks:",
+        "highlight": True,
+        "highlight_text": "FEATURE ENGINEERING"
+    },
+    {
+        "file": "clean_ml_dataset.py",
+        "description": "├─ Drops rows with null labels (last 21 days)\n└─ Drops rows with null features (first rows without rolling windows)",
+        "output": "ml_features_and_labels_clean.csv (7,762 rows)",
+        "rows": "7,762 rows",
+        "icon": ":material/code_blocks:",
+        "highlight": True,
+        "highlight_text": "FINAL ML CLEANING"
+    }
+]
+
+
+for step in pipeline_steps:
+    badge = f'<span style="background-color: #4b8bbe; color: white; padding: 4px 12px; border-radius: 12px; font-family: monospace; font-weight: bold;">{step["file"]}</span>'
+    
+    if step.get("highlight"):
+        st.badge(f"**`{step['file']}`** ◄── {step['highlight_text']}", color="green", icon=":material/code_blocks:")
+    else:
+        st.badge(f"**`{step['file']}`**", color="green", icon=":material/code_blocks:")
+    
+    st.markdown(f"```\nDescription:\n{step['description']}\n└─ Output: {step['output']}\n```")
+    st.markdown("")
+    
 st.markdown("---")
-
-
-# Data Integration
-st.subheader("2️⃣ Data Integration")
-# integrate_data.py snippet
-
-# st.markdown("""**Scripts:**""" )
-st.caption("`integrate_data.py` : Loads all raw CSV files, fixes MultiIndex issues, and integrates into one unified dataset. Each row represents a (stock, date) pair with all available raw data columns.")
-
-
-# Data Cleaning
-st.subheader("3️⃣ Data Cleaning")
-# prepare_data.py snippet - imputation and outlier removal
-# clean_ml_dataset.py snippet - removing null rows
-st.caption("`prepare_data.py` : Imputation strategies (mean, median, forward-fill) and outlier removal techniques (IQR, Z-score) applied to raw dataset to create clean ML-ready dataset.")
-st.caption("`clean_ml_dataset.py` : Further cleans the ML dataset by removing rows with any remaining null values after imputation.")
-
-# Feature Scaling
-st.subheader("4️⃣ Feature Scaling")
-# scale_features.py snippet - StandardScaler, RobustScaler, MinMaxScaler
-st.caption("`scale_features.py` : Applies appropriate scaling techniques (StandardScaler, RobustScaler, MinMaxScaler) to prepared dataset and documents all applied transformations.")
-
-# Feature Engineering
-st.subheader("5️⃣ Feature Engineering")
-# create_features_and_label.py snippet
-st.caption("`create_features_and_label.py` : Creates engineered features (X) and target variable (y) from integrated prepared data. Saves to a separate CSV file: `ml_features_and_labels.csv` ")
-
-# Model Training & Results
-st.subheader("6️⃣ Model Training & Results")
-
-# jupyter notebook snippets for model training 
-st.caption("**Traning Notebooks:**")
-st.caption("`Logistic Regression Model.ipynb`")
-st.caption("`Random Forest Model.ipynb`")
-st.caption("`XGBoost Model.ipynb`")
-# h20 automl model training snippet
-# compare_models.py snippet
-# compare_models_timeseries.py snippet
-# compare_models_timeseries_gbm.py snippet
-# compare_models_timeseries_ensemble.py snippet
-
-# Performance Evaluation
-st.subheader("7️⃣ Performance Evaluation")
-st.caption("`compare_models.py` : Random Split Comparison (RF)")
-st.caption("`compare_models_timeseries.py` : Time Series Comparison (RF)")
-st.caption("`compare_models_timeseries_gbm.py` : Time Series Comparison (GBM)")
-st.caption("`run_automl.py` : AutoML")
-st.caption("`investigate_automl_leakage.py` : Helps discover H2O AutoML leakage: The 96.6% AUC was inflated due to it's default 5-fold Cross-Validation `(nfolds=5)` ")
-st.caption("`investigate_overfitting.py` : Overfitting Investigation")
+# st.markdown(f"{pi}")
