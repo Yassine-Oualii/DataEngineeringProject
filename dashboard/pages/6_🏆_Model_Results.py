@@ -13,6 +13,22 @@ data = load_data()
 if not data or ('rf_results' not in data and 'gbm_results' not in data):
     st.warning("No model results available. Please train models first.")
 else:
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.success("✅ **Random Forest Best**: 51.8% (All Combined)")
+        st.info("💡 Benefits from combining all data prep techniques")
+
+    with col2:
+        st.success("✅ **GBM Best**: 51.9% (Scaled Data Only)")
+        st.info("💡 Performs best with scaling alone")
+
+    st.warning("""
+    **Key Takeaway**: Scaling is the most critical data preparation step for this time-series prediction task. 
+    While Random Forest benefits from combining all techniques (51.8%), GBM achieves similar performance (51.9%) 
+    with scaling alone, suggesting diminishing returns from additional preprocessing.
+    """)
+    st.markdown("---")
     st.subheader("Time-Series Split Results (Realistic)")
     col1, col2 = st.columns(2)
 # Random Forest Results
@@ -20,6 +36,13 @@ else:
         st.markdown("### 🌲 Random Forest")
         
         rf_df = data['rf_results']
+        
+        # Add column called Improvement to the rf_df showing improvement over baseline
+        baseline_acc = rf_df[rf_df['Scenario'] == 'Baseline (Simple Fill)']['Accuracy'].values[0]
+        # Round to 2 decimals
+        # Add + or - sign to Improvement depending on positive or negative improvement
+        rf_df['Improvement'] = ((rf_df['Accuracy'] - baseline_acc) * 100).round(2)  # Percentage improvement
+        rf_df['Improvement'] = rf_df['Improvement'].apply(lambda x: f"{'+' if x > 0 else ''}{x:.2f}%")
         
         # Display table
         st.dataframe(rf_df, width='stretch')
@@ -43,7 +66,12 @@ else:
         st.markdown("### ⚡ Gradient Boosting Machine")
         
         gbm_df = data['gbm_results']
-        
+        # Add column called Improvement to the df showing improvement over baseline
+        baseline_acc = gbm_df[gbm_df['Scenario'] == 'Baseline (Simple Fill)']['Accuracy'].values[0]
+        # Round to 2 decimals
+        # Add + or - sign to Improvement depending on positive or negative improvement
+        gbm_df['Improvement'] = ((gbm_df['Accuracy'] - baseline_acc) * 100).round(2)  # Percentage improvement
+        gbm_df['Improvement'] = gbm_df['Improvement'].apply(lambda x: f"{'+' if x > 0 else ''}{x:.2f}%")
         # Display table
         st.dataframe(gbm_df, width='stretch')
         

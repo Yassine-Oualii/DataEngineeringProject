@@ -14,10 +14,7 @@ data = load_data()
 
 if 'ml' in data:
     df = data['ml']
-    
-    # Feature categories
-    st.subheader("Engineered Features (30+ features)")
-    
+        # Quick stats
     feature_categories = {
         "Stock Price Features": ["daily_return", "r_1W", "r_1M", "r_3M", "vol_1M", "MA20_ratio", "MA50_ratio", "HL_range", "vol_z"],
         "S&P 500 Features": ["sp500_daily_return", "sp500_vol_1M"],
@@ -27,32 +24,41 @@ if 'ml' in data:
         "Technical Indicators": ["spy_RSI_t", "spy_SMA_50_t", "spy_SMA_200_t", "qqq_RSI_t", "qqq_SMA_50_t", "qqq_SMA_200_t"],
         "Sector Features": ["sector_XLK_t", "sector_XLF_t", "sector_XLV_t", "sector_XLE_t", "sector_XLI_t"]
     }
-    
-    for category, features in feature_categories.items():
-        available = [f for f in features if f in df.columns]
-        if available:
-            with st.expander(f"**{category}** ({len(available)} features)"):
-                st.write(", ".join(available))
+    st.subheader("🧠 Engineered Features (30+ features)")
+
+    tabs = st.tabs(list(feature_categories.keys()))
+
+    for (category, features), tab in zip(feature_categories.items(), tabs):
+        with tab:
+            available = [f for f in features if f in df.columns]
+            st.caption(f"{len(available)} features")
+            
+            # Display as badges or list
+            cols = st.columns(2)
+            for i, feature in enumerate(available):
+                with cols[i % 2]:
+                    st.code(feature, language=None)
     
     st.markdown("---")
     # Target variable distribution
     st.subheader("Target Variable Distribution")
-    
-    if 'y' in df.columns:
-        y_counts = df['y'].value_counts()
-        
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.metric("Outperform (y=1)", f"{y_counts.get(1, 0):,}")
-        
-        with col2:
-            st.metric("Underperform (y=0)", f"{y_counts.get(0, 0):,}")
-        
-        with col3:
-            balance = y_counts.get(1, 0) / (y_counts.get(0, 0) + y_counts.get(1, 0)) * 100
-            st.metric("Balance", f"{balance:.1f}%")
-        
+    col1, col2 = st.columns(2)
+    with col1:
+        if 'y' in df.columns:
+            y_counts = df['y'].value_counts()
+            
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.metric("Outperform (y=1)", f"{y_counts.get(1, 0):,}")
+            
+            with col2:
+                st.metric("Underperform (y=0)", f"{y_counts.get(0, 0):,}")
+            
+            with col3:
+                balance = y_counts.get(1, 0) / (y_counts.get(0, 0) + y_counts.get(1, 0)) * 100
+                st.metric("Balance", f"{balance:.1f}%")
+    with col2:    
         # Pie chart
         fig = px.pie(
             values=y_counts.values,
@@ -60,7 +66,7 @@ if 'ml' in data:
             title='Target Class Distribution',
             color_discrete_sequence=['#EF553B', '#00CC96']
         )
-        fig.update_layout(height=400)
+        fig.update_layout(height=500)
         st.plotly_chart(fig, width='stretch')
     
     st.markdown("---")
